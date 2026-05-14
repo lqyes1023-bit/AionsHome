@@ -2,9 +2,8 @@ fastapi
 uvicorn
 httpx
 aiosqlite
-opencv-python
+opencv-python-headless
 Pillow
-sounddevice
 numpy
 webrtcvad-wheels
 pyncm
@@ -14,7 +13,6 @@ ebooklib
 beautifulsoup4
 lxml
 websockets
-pywin32
 psutil
 akshare
 chinese-calendar
