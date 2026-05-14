@@ -1,32 +1,32 @@
-# 1. 坚持使用 Python 3.11
+# 使用更稳定的官方基础镜像
 FROM python:3.11-slim
 
+# 设置工作目录
 WORKDIR /app
 
-# 2. 安装系统依赖（增加 git，用来直接从源码抓取插件）
+# 提前安装 Git 和基础编译工具
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
     gcc \
     python3-dev \
-    git && \
-    rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# 3. 升级 pip
-RUN pip install --no-cache-dir --upgrade pip
+# 升级工具
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# 4. 暴力安装 pyncm：如果正常安装不行，就直接从 GitHub 源码安装
-RUN pip install --no-cache-dir pyncm || \
-    pip install --no-cache-dir git+https://github.com/greatest-work/PyNCM.git || \
-    echo "Skip pyncm for now"
+# 直接安装 pyncm (直接指向 GitHub 稳定源码)
+RUN pip install --no-cache-dir git+https://github.com/greatest-work/PyNCM.git
 
-# 5. 安装剩下的所有依赖
-COPY aion-chat/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt || true
+# 复制依赖文件并安装 (加一个 --no-deps 避免依赖冲突)
+COPY aion-chat/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. 复制所有代码
+# 复制项目代码
 COPY . .
 
+# 环境变量
 ENV PORT=8080
-EXPOSE 8080
+ENV PYTHONUNBUFFERED=1
 
-# 增加一个启动前的环境检查
+# 启动命令
 CMD ["python", "aion-chat/main.py"]
