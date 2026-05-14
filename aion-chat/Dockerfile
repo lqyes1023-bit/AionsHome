@@ -1,19 +1,27 @@
+# 使用更稳定的基础镜像
 FROM python:3.10-slim
+
+# 设置工作目录
 WORKDIR /app
 
-# 1. 升级工具
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# 预安装基础工具
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc python3-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-# 2. 复制整个大仓库（在大门口施工必须全拿进来）
+# 升级 pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# 先只复制依赖文件（这样构建更稳）
+COPY aion-chat/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制剩下的所有代码
 COPY . .
 
-# 3. 强行解决那个讨厌的 pyncm 报错
-RUN pip install --no-cache-dir pyncm==1.8.2 || pip install --no-cache-dir pyncm --pre || echo "Skip pyncm error"
-
-# 4. 指向子目录安装（注意路径）
-RUN pip install --no-cache-dir -r aion-chat/requirements.txt || true
-
+# 环境变量设置
+ENV PORT=8080
 EXPOSE 8080
 
-# 5. 指向子目录启动
+# 启动命令
 CMD ["python", "aion-chat/main.py"]
